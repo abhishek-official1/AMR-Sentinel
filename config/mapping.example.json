@@ -1,0 +1,23 @@
+{
+  "columns": {
+    "year": "REPLACE_WITH_YEAR_HEADER",
+    "who_region": "REPLACE_WITH_WHO_REGION_HEADER",
+    "resistance_pct": "REPLACE_WITH_MEDIAN_PERCENT_HEADER"
+  },
+  "percentage_scale": "percent",
+  "indicator_code": "ECOLI_3GC_BSI",
+  "statistic_type": "who_unadjusted_regional_median",
+  "source_id": "S1",
+  "source_url": "https://worldhealthorg.shinyapps.io/glass-dashboard/",
+  "source_revision": "2025-09-25",
+  "source_downloaded_at": "REPLACE_WITH_ACTUAL_ISO8601_DOWNLOAD_TIMESTAMP_WITH_TIMEZONE",
+  "definition_note": "REPLACE_WITH_EXACT_WHO_INDICATOR_AND_CHART_STATISTIC_DEFINITION",
+  "filters": {
+    "chart": "Global AMR data / Time series of resistance to antibiotics",
+    "infection_type": "Bloodstream infection",
+    "pathogen": "Escherichia coli",
+    "antibiotic_or_indicator": "REPLACE_WITH_EXACT_WHO_SELECTION",
+    "region": "REPLACE_WITH_EXPORTED_REGION_SELECTION"
+  },
+  "coverage_note": "REPLACE_WITH_SOURCE_COVERAGE_CAVEATS; counts not supplied are unknown"
+}

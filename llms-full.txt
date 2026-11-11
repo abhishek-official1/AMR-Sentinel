@@ -1,0 +1,241 @@
+# AMR Sentinel: full documentation
+
+Local dashboard and Colab workflow for regional antibiotic resistance analysis.
+
+---
+
+## Source: README.md
+
+# AMR Sentinel
+
+A React dashboard for WHO regional antibiotic resistance analytics, with a local
+FastAPI data service and a separate user-run Google Colab experiment.
+**No model is trained, loaded or used for inference on this device.**
+
+On a fresh clone, the dashboard opens in an empty state until you import a study.
+The locally checked Colab run contained 407 national observations from 95 countries,
+31 derived regional medians over 2016–2022, and experimental 2023 projections.
+Those source files and result tables are not in this repository. The app checks
+source hashes, normalized observations, chronological cases and matched model
+scores when a complete study bundle is imported.
+
+## Start the dashboard
+
+Python 3.11+ and Node.js are needed for initial setup; Node 24 was used for checks.
+After the frontend is built, only the Python server and browser are needed.
+
+```powershell
+python -m pip install -r requirements.txt
+cd frontend
+npm ci
+npm run build
+cd ..
+python app.py
+```
+
+Open **http://127.0.0.1:8000**. To use another port:
+
+```powershell
+python app.py --port 8080
+```
+
+React is bundled with esbuild's native CLI. The build helper uses Python to run
+the CLI, avoiding restricted Node child-process pipes on this Windows machine.
+`npm run dev` watches source changes; run the Python server separately and refresh
+after edits. No external fonts, CDNs, map services, API keys or cloud services are
+required. Streamlit and Plotly are no longer dependencies.
+
+The lockfile pins the frontend packages for `npm ci`.
+
+## Dashboard views
+
+- **Regional overview:** same-year observed percentages, six selectable WHO
+  regions, actual reporting coverage, historical context and matched-model insight.
+- **Historical trends:** region/year filters, visible gaps, consecutive-year
+  slopes, annual percentage-point changes and downloadable observed rows.
+- **Forecast lab:** observed history with a visually distinct projected diamond,
+  selectable returned models, raw predictions/clipping flags and honest sparse
+  history states. All values come from Colab CSV outputs.
+- **Model evaluation:** final holdout or earlier backtests, MAE/RMSE on identical
+  cases, individual errors, exclusions and training metadata.
+- **Sources & data quality:** source revisions, hashes, country-count unknowns,
+  consecutive history, unmapped identifier exclusions, source links and exports.
+
+Controls affect charts, tables and CSV exports together. Mouse and keyboard users
+can inspect chart points; tables expose exact values. The interface supports
+mobile navigation and reduced motion. Brand colors and chart colors have
+different purposes: muted categorical plot colors identify the six regions.
+
+## Import observations or a new Colab study
+
+Click **Import study**. A complete `amr_project_bundle.zip` contains matching
+observations and results; both are verified before the current study changes.
+Fitted pickle/joblib artifacts are never loaded. Bad uploads leave the existing
+study intact. UI uploads live for the current server session. Keep the original
+bundle as your reproducible archive.
+
+For a persistent CLI import:
+
+```powershell
+python -m src.study --input path/to/amr_project_bundle.zip
+```
+
+This saves hash-checked raw data, normalized CSV/Parquet, the source manifest and
+verified result files under `data/` and `results/`. Saved local inputs take
+precedence over the default notebook export on server restart. National coverage
+extras and the HTML report remain in the original Colab bundle; unknown extras
+are shown as unknown rather than inferred.
+
+The **WHO CSV / XLSX** import tab accepts an untouched regional source file and
+an explicit adapter JSON. Copy `config/mapping.example.json` and replace its
+template fields with actual column names, definition, source URL, release and
+download time. For example, the CLI equivalent is:
+
+```powershell
+python -m src.clean --input data/raw/your_regional_export.csv --mapping config/your_mapping.json
+```
+
+Supported fields: `year`, `who_region`, `resistance_pct`, optional country and
+compatible infection counts. Declare `percentage_scale` as `percent` or
+`fraction`; small numbers alone never determine the scale. A fixed `who_region`
+may be declared in the adapter when the export has no region column. Nulls remain
+null, duplicates cannot inflate a series, and source/methodology changes are
+rejected. Official unadjusted medians and derived country medians remain separate.
+
+The notebook's original **national** CSV uses `RATE_PER_100_N` and M49 country
+codes; use it in the notebook's upload cell. The regional app adapter must not
+mistake individual national rows for regional medians.
+
+## Colab workflow
+
+The [public Colab notebook](notebooks/AMR_Sentinel_Public.ipynb) contains the
+analysis source without saved outputs or runtime metadata. The original executed
+notebook and study bundle stay local.
+
+1. Obtain the primary CSV from the [WHO indicator page](https://data.who.int/indicators/i/918081E/745F475)
+   using its **Download** button. The source CSV is not in this repository.
+2. Open the notebook in Google Colab with a CPU runtime. If an earlier in-kernel
+   package replacement caused a NumPy import failure, delete/reconnect that
+   runtime first. The current notebook probes scientific imports in a fresh
+   subprocess, uses working Colab packages or a separate target installation,
+   and does not import scientific packages in its notebook kernel.
+3. Upload the one WHO national CSV and run the remaining cells, including the
+   explicit `RATE_PER_100_N` mapping patch. The pipeline performs validation,
+   national EDA, derived regional aggregation, chronological forecasting and report
+   generation. This current user version uses uploaded data, not automatic HTTP
+   acquisition.
+4. Download `amr_project_bundle.zip` and import it into React or via the CLI.
+
+The bundle contains original/processed data, validation diagnostics, country
+composition/coverage, results, charts, dependency versions and an HTML/Markdown
+report. Optional fitted pipelines are separate and are not needed locally.
+
+## Results and interpretation
+
+The checked 2022 holdout uses the same five eligible regional cases for all three
+models. Naïve MAE/RMSE: **9.61 / 11.60 pp**; linear: **11.82 / 15.28 pp**;
+Ridge: **12.25 / 14.78 pp**. Ridge did not improve on carry-forward in this study.
+Americas lacks enough consecutive history for the main holdout/projection.
+The 15 returned rows are three methods across five regions, targeting **2023**,
+not observed 2023 values or predictions about the current year.
+
+These are derived unweighted medians of available national percentages, with at
+least five reporting countries. They are not WHO dashboard regional medians,
+adjusted estimates or population prevalence. The notebook uses a May 2025 region
+lookup, so historical memberships can differ. Three source rows with unmapped
+identifier `412` were excluded. Missing infection/testing counts cannot establish
+WHO's count-based eligibility. Source authenticity/revision are explicitly marked
+as user supplied rather than independently authenticated.
+
+Descriptive slopes require three consecutive observations. Increasing ≥+1.0 and
+decreasing ≤−1.0 pp/year are application heuristics, not significance tests.
+Main forecasts require four consecutive prior observations. Ridge needs at least
+12 lag-complete training rows from three regions; this run used default alpha 1
+because earlier Ridge validation coverage was insufficient. Training transforms
+remain inside the past-only pipeline in Colab. No confidence intervals or clinical
+recommendations are supplied.
+
+## Checks
+
+```powershell
+python -m pytest -q
+cd frontend
+npm test
+npm run build
+```
+
+Python tests exercise the validators, API, synthetic study contracts and safe
+imports. Checks that need the optional local WHO CSV or Colab study export skip
+on a fresh clone. Frontend tests cover gaps, matched cases, missing values, target
+separation and CSV output. With a complete local study bundle, `npm run test:render`
+also exercises the populated React views, sparse forecasts, selected-model
+fallback and methodology labels. No check executes training. The production JS
+bundle is approximately 240 KB before compression.
+
+Browser rendering/screenshots could not be verified here: installed Chrome and
+Edge fail at Windows IPC channel creation with Access Denied. The optional
+`npm run test:browser` can attach to a dedicated headless browser configured with
+`CDP_URL` (default `http://127.0.0.1:9222`) while the app is running; it checks
+desktop/mobile navigation and saves screenshots to `.browser-artifacts/`.
+Passing render checks does not claim passing real-browser visual QA.
+
+See the [local verification record](docs/VERIFICATION.md),
+[source notes](docs/SOURCE_VERIFICATION.md), and
+[project report](reports/MINI_PROJECT_REPORT.md).
+
+## License
+
+The project code is available under the [MIT License](LICENSE). This license
+does not cover the WHO source CSV, third-party datasets, or trained artifacts.
+
+Sources: [WHO GLASS](https://worldhealthorg.shinyapps.io/glass-dashboard/),
+[E. coli definition](https://data.who.int/indicators/i/918081E/745F475),
+[MRSA definition](https://data.who.int/indicators/i/918081E/5DD9606).
+Academic prototype; not clinical guidance.
+
+---
+
+## Source: CONTRIBUTING.md
+
+# Contributing to AMR Sentinel
+
+Start with a data-free check. Python tests cover source validation and synthetic study contracts; frontend tests cover chart data and exports.
+
+```powershell
+python -m pip install -r requirements.txt
+python -m pytest -q
+cd frontend
+npm ci
+npm test
+npm run build
+```
+
+A complete local Colab export unlocks the optional integration tests. Do not commit the WHO source CSV, national observations, model outputs, OneDrive files, browser profiles, or generated builds. If a change affects a resistance percentage, keep the indicator definition, percentage scale, region mapping, year, and denominator visible in the pull request. Compare forecasts on identical cases and keep observed values separate from projections.
+
+Open an issue with a synthetic reproduction for ordinary bugs. For a security report, use [SECURITY.md](SECURITY.md).
+
+---
+
+## Source: CHANGELOG.md
+
+# Changelog
+
+## [Unreleased]
+
+- Independent source-revision verification and a new holdout remain open research work.
+
+## [2.0.0] - 2026-11-11
+
+- Prepared the React and FastAPI source for a private repository.
+- Added a source-only Colab notebook and documented how to regenerate a study bundle.
+- Kept the user-supplied WHO CSV, national observations, model results, and browser state outside Git.
+
+---
+
+## Source: SECURITY.md
+
+# Security policy
+
+If the repository's Security tab offers private vulnerability reporting, use it. Otherwise, open an issue asking for a private contact channel **without including exploit details, credentials, or private data**.
+
+Include the affected file or feature, a small reproduction, and the impact in the private report. Please allow time for a fix before publishing technical details. For ordinary bugs, use a regular issue with synthetic or public inputs.

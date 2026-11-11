@@ -1,0 +1,23 @@
+{
+  "name": "amr-sentinel-dashboard",
+  "version": "2.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Local dashboard for regional antibiotic resistance study results",
+  "repository": "https://github.com/abhishek-official1/AMR-Sentinel",
+  "type": "module",
+  "scripts": {
+    "build": "python scripts/build.py",
+    "dev": "python scripts/build.py --watch",
+    "test": "node --test --test-isolation=none tests/*.test.mjs",
+    "test:render": "python scripts/check-render.py",
+    "test:browser": "node scripts/browser-smoke.mjs"
+  },
+  "dependencies": {
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "esbuild": "0.27.3"
+  }
+}
