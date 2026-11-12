@@ -8,8 +8,46 @@ Local dashboard and Colab workflow for regional antibiotic resistance analysis.
 
 # AMR Sentinel
 
-A React dashboard for WHO regional antibiotic resistance analytics, with a local
-FastAPI data service and a separate user-run Google Colab experiment.
+[![MIT license](https://img.shields.io/badge/license-MIT-2e6b59)](LICENSE)
+[![Checks](https://github.com/abhishek-official1/AMR-Sentinel/actions/workflows/ci.yml/badge.svg)](https://github.com/abhishek-official1/AMR-Sentinel/actions/workflows/ci.yml)
+![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-356e9b)
+
+**AMR** means *antimicrobial resistance*: germs become harder to treat with
+medicines that once worked against them. AMR Sentinel looks at one specific
+measure: the percentage of tested *E. coli* bloodstream infections resistant to
+third-generation cephalosporins. The [World Health Organization (WHO) defines
+this measure](https://data.who.int/indicators/i/918081E/745F475) for patients
+whose blood samples were taken and tested.
+
+Resistance data can help public-health teams see where treatment options may be
+under pressure. WHO's [GLASS surveillance programme](https://www.who.int/initiatives/glass)
+collects and shares such data. This project makes the available country reports
+easier to inspect by region and asks whether a simple next-year forecast is
+credible when reporting histories are short and uneven.
+
+- **The dataset:** A user-supplied download from WHO's *E. coli* indicator page
+  contained 421 source rows. After documented exclusions, the analysis used 407
+  national observations from 95 countries for 2016–2022. The CSV is not published here.
+- **The outputs:** 31 derived regional medians, coverage and trend views, a matched
+  2022 model comparison, and experimental projections for 2023.
+- **The finding:** On five eligible 2022 regional cases, carrying the last observed
+  value forward had lower error than the linear and Ridge models. This small
+  comparison does not establish performance elsewhere.
+
+> **Read the percentages carefully:** these are medians derived from the countries
+> that reported in each year. They are not population prevalence, WHO's official
+> regional medians, or clinical guidance. The supplied source file's authenticity
+> and publication revision have not been independently confirmed.
+
+**Go to:** [How it works](#how-it-works) · [Start the dashboard](#start-the-dashboard)
+· [Run the Colab study](#colab-workflow) · [Read the results](#results-and-interpretation)
+
+<a id="how-it-works"></a>
+## 🧭 How the project works
+
+The React dashboard shows WHO regional antibiotic resistance analytics through a
+local FastAPI data service. A separate, user-run Google Colab experiment prepares
+the data and evaluates the forecasts.
 **No model is trained, loaded or used for inference on this device.**
 
 On a fresh clone, the dashboard opens in an empty state until you import a study.
@@ -19,7 +57,8 @@ Those source files and result tables are not in this repository. The app checks
 source hashes, normalized observations, chronological cases and matched model
 scores when a complete study bundle is imported.
 
-## Start the dashboard
+<a id="start-the-dashboard"></a>
+## 🚀 Start the dashboard
 
 Python 3.11+ and Node.js are needed for initial setup; Node 24 was used for checks.
 After the frontend is built, only the Python server and browser are needed.
@@ -47,7 +86,7 @@ required. Streamlit and Plotly are no longer dependencies.
 
 The lockfile pins the frontend packages for `npm ci`.
 
-## Dashboard views
+## 📊 Dashboard views
 
 - **Regional overview:** same-year observed percentages, six selectable WHO
   regions, actual reporting coverage, historical context and matched-model insight.
@@ -66,7 +105,7 @@ can inspect chart points; tables expose exact values. The interface supports
 mobile navigation and reduced motion. Brand colors and chart colors have
 different purposes: muted categorical plot colors identify the six regions.
 
-## Import observations or a new Colab study
+## 📥 Import observations or a new Colab study
 
 Click **Import study**. A complete `amr_project_bundle.zip` contains matching
 observations and results; both are verified before the current study changes.
@@ -106,7 +145,8 @@ The notebook's original **national** CSV uses `RATE_PER_100_N` and M49 country
 codes; use it in the notebook's upload cell. The regional app adapter must not
 mistake individual national rows for regional medians.
 
-## Colab workflow
+<a id="colab-workflow"></a>
+## 🧪 Colab workflow
 
 The [public Colab notebook](notebooks/AMR_Sentinel_Public.ipynb) contains the
 analysis source without saved outputs or runtime metadata. The original executed
@@ -130,7 +170,8 @@ The bundle contains original/processed data, validation diagnostics, country
 composition/coverage, results, charts, dependency versions and an HTML/Markdown
 report. Optional fitted pipelines are separate and are not needed locally.
 
-## Results and interpretation
+<a id="results-and-interpretation"></a>
+## 🔬 Results and interpretation
 
 The checked 2022 holdout uses the same five eligible regional cases for all three
 models. Naïve MAE/RMSE: **9.61 / 11.60 pp**; linear: **11.82 / 15.28 pp**;
@@ -155,7 +196,7 @@ because earlier Ridge validation coverage was insufficient. Training transforms
 remain inside the past-only pipeline in Colab. No confidence intervals or clinical
 recommendations are supplied.
 
-## Checks
+## ✅ Checks
 
 ```powershell
 python -m pytest -q
@@ -183,7 +224,7 @@ See the [local verification record](docs/VERIFICATION.md),
 [source notes](docs/SOURCE_VERIFICATION.md), and
 [project report](reports/MINI_PROJECT_REPORT.md).
 
-## License
+## 📄 License
 
 The project code is available under the [MIT License](LICENSE). This license
 does not cover the WHO source CSV, third-party datasets, or trained artifacts.
